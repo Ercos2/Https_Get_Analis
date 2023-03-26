@@ -7,8 +7,11 @@
 int main(int argc, char *argv[]) {
     QCoreApplication a(argc, argv);
 
-    Server_answer server_answer("https://rdb.altlinux.org/api/export/branch_binary_packages/sisyphus");                         //создаём класс и передаём запрос
-    Server_answer server_answer1("https://rdb.altlinux.org/api/export/branch_binary_packages/p10");
+    QString first_branch = "sisyphus";
+    QString second_branch = "p10";
+
+    Server_answer server_answer("https://rdb.altlinux.org/api/export/branch_binary_packages/" + first_branch);                         //создаём класс и передаём запрос
+    Server_answer server_answer1("https://rdb.altlinux.org/api/export/branch_binary_packages/" + second_branch);
 
     while(!server_answer.ready_flag || !server_answer1.ready_flag) {}                                                           //ожидаем, пока обы потока завершат действие
 
