@@ -8,7 +8,10 @@ CONFIG += c++17
 
 SOURCES += \
         main.cpp \
+        my_comparison.cpp \
+        my_recurring.cpp \
         my_reply.cpp \
+        reply_comparison.cpp \
         server_answer.cpp
 
 # Default rules for deployment.
@@ -17,5 +20,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 HEADERS += \
+    my_comparison.h \
+    my_recurring.h \
     my_reply.h \
+    reply_comparison.h \
     server_answer.h
