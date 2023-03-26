@@ -4,12 +4,14 @@
 #include <QThreadPool>
 #include <QRunnable>
 #include <QJsonArray>
+#include <QJsonObject>
 #include <QJsonValueRef>
 
 //#include <mutex>
 //std::mutex mute_name;
 
-#include "my_comparison.h"
+//#include "my_comparison.h"
+#include "Struct_source.h"
 
 
 class My_Recurring : public QObject, public QRunnable

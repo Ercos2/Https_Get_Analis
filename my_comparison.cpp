@@ -1,170 +1,90 @@
 #include "my_comparison.h"
-#include "my_recurring.h"
 
-//#include <mutex>
-#include <QThreadPool>
-#include <QRunnable>
+My_Comparison::My_Comparison(Reply_struct* first_struct, Reply_struct* second_struct, QObject *parent)
+    : QObject(parent), first_json(first_struct->json_array), second_json(second_struct->json_array),
+    first_json_names(first_struct->names), second_json_names(second_struct->names),
+    first_json_versions(first_struct->versions), second_json_versions(second_struct->versions){
 
-#include <QJsonValueRef>
+}
 
-//std::mutex mute_name;
-/*
-class Recurring_class : public QObject, public QRunnable {
-    Q_OBJECT
-    int a = 0;
-    QJsonArray first_json;
-    QJsonArray second_json;
-    Recurring* recurring;
-public:
-    My_Recurring(QJsonArray& first_json, QJsonArray& second_json, Recurring* recurring, QObject *parent = 0) :
-        QObject(parent), first_json(first_json), second_json(second_json), recurring(recurring) {}
-    void run() {
-        for(int b = 0; b < second_json.size(); ++b) {
-            if (first_json[a] == second_json[b]) {
-                recurring->recurring_first_num.push_back(a);
-                recurring->recurring_second_num.push_back(b);
+void recurr(std::vector<QString>& names_first, std::vector<QString> names_second, std::vector<int>& recurring_num) {
+    for (int a = 0; a < names_first.size(); ++a) {
+        for (int b = 0; b < names_second.size(); ++b) {
+            if (names_first[a] == names_second[b]){
+                recurring_num.push_back(a);
                 break;
             }
         }
-        if(!(a % 1000)) qDebug() << "recurring alive " << a;
-        ++a;
+        if(!(a % 10000)) qDebug() << "recurring process " << a << " of " << names_first.size();
     }
-};
-*/
-My_Comparison::My_Comparison(QJsonArray first_json, QJsonArray second_json, QObject *parent)
-    : QObject(parent), first_json(first_json), second_json(second_json) {
-
 }
 
 void My_Comparison::recurring_search() {
     qDebug() << "recurring started";
-    bool flag = false;
-    int first_size = first_json.size();
-    int second_size = second_json.size();
-    QThreadPool::globalInstance()->setExpiryTimeout(1000);
-    for(int a = 0; a * 1000 < first_size; ++a) {
-        if (a * 1000 < first_size) {
-        My_Recurring *recurr = new My_Recurring(first_json, second_json, &recurring, (a * 1000), ((a + 1) * 1000), first_size, second_size, flag);
-        QThreadPool::globalInstance()->start(recurr);
 
-        }
-        else {
-            My_Recurring *recurr = new My_Recurring(first_json, second_json, &recurring, (a * 1000), first_size, first_size, second_size, flag);
-            QThreadPool::globalInstance()->start(recurr);
-        }
-        //this->thread()->sleep(1);
+    //создаём по потоку на каждый запрос
+    //можно было создать вектор потоков или QThreadPool, но два потока того не стоят
+    //передаём первый параметр ссылкой для экономии, а второй копируем, чтобы избежать ошибок доступа
+    QThread *first_thread = QThread::create(recurr, std::ref(first_json_names), second_json_names, std::ref(recurring.recurring_first_num));
+    QThread *second_thread = QThread::create(recurr, std::ref(second_json_names), first_json_names, std::ref(recurring.recurring_second_num));
 
-        /*
-        for(int b = 0; b < second_json.size(); ++b) {
-            if (first_json[a] == second_json[b]) {
-                recurring.recurring_first_num.push_back(a);
-                recurring.recurring_second_num.push_back(b);
-                    break;
-            }
-        }
-        if(!(a % 1000)) qDebug() << "recurring alive " << a;
-        */
-    }
-    qDebug() << "Wait cicle";
-    while (!flag) {
+    first_thread->start();
+    second_thread->start();
 
+    while(!first_thread->isFinished() || !second_thread->isFinished())
         this->thread()->sleep(1);
-    }
-    /*
-    int second_json_size = second_json.size();
-    for (int a = 0; a < first_json.size(); ++a) {
-        for (int b = 0; b < second_json_size; ++b) {
-            //if (first_json[a].toObject()["name"] == second_json[b].toObject()["name"]) {
-            if (first_json[a] == second_json[b]){
-                recurring.recurring_first_num.push_back(a);
-                recurring.recurring_second_num.push_back(b);
-                break;
-            }
-            //}
-        }
-        if(!(a % 1000)) qDebug() << "recurring alive " << a;
-    }
-    */
-    /*
-    for (int a = 0; a < names_first.size(); ++a) {
-        for (int b = 0; b < names_second.size(); ++b) {
-            if (names_first[a] == names_second[b]){
-                recurring.recurring_first_num.push_back(a);
-                recurring.recurring_second_num.push_back(b);
-                break;
-            }
-        }
-        if(!(a % 1000)) qDebug() << "recurring alive " << a;
-    }
-    /*/
+
+    first_thread->deleteLater();
+    second_thread->deleteLater();
+
+
     qDebug() << "recurring finished";
     qDebug() << "recurring size: " << recurring.recurring_first_num.size() << " " << recurring.recurring_second_num.size();
 
     emit recurring_search_finished();
 }
-/*
-void unique(std::vector<QString>& names_vec, std::vector<int>& recurring_nums, std::vector<QString>&  unique, bool& thread_flag) {
-    for (int a = 0; a < names_vec.size(); ++a) {
-        bool flag = false;
-        for (int b = 0; b <= a; ++b) {
-            if (a == recurring_nums[b]) {
-                flag = true;
-                break;
-            }
-        }
-        if (!flag) unique.push_back(names_vec[a]);
-        if(!(a % 1000)) qDebug() << "unique alive " << a;
-    }
-    thread_flag = true;
-}
-*/
-void unique(QJsonArray& json_array, std::vector<int>& recurring_nums,std::vector<int>& unique, bool& thread_flag) {
+
+void unique(QJsonArray& json_array, std::vector<int>& recurring_nums,std::vector<int>& unique) {
     for (int a = 0; a < json_array.size(); ++a) {
         bool flag = false;
-        for (int b = 0; b <= recurring_nums.size(); ++b) {
+        for (int b = 0; b < recurring_nums.size(); ++b) {
             if (a == recurring_nums[b]) {
                 flag = true;
                 break;
             }
         }
         if (!flag) unique.push_back(a);
-        if(!(a % 1000)) qDebug() << "unique alive " << a;
+        if(!(a % 10000)) qDebug() << "unique process " << a << " of " << json_array.size();
     }
-    thread_flag = true;
 }
 
 void My_Comparison::comparison_unique() {
     qDebug() << "unique started";
-    bool first_thread_flag = false;
-    bool second_thread_flag = false;
-
-    QThread* first_thread = QThread::create(unique, std::ref(first_json), std::ref(recurring.recurring_first_num), std::ref(unique_first), std::ref(first_thread_flag));
-    QThread* second_thread = QThread::create(unique, std::ref(second_json), std::ref(recurring.recurring_second_num), std::ref(unique_second), std::ref(second_thread_flag));
-    //QThread* first_thread = QThread::create(unique, std::ref(names_first), std::ref(recurring.recurring_first_num), std::ref(unique_first), std::ref(first_thread_flag));
-    //QThread* second_thread = QThread::create(unique, std::ref(names_second), std::ref(recurring.recurring_second_num), std::ref(unique_second), std::ref(second_thread_flag));
+    //та же ситуация, что и с копиями, но здесь вся память разная, поэтому всё можно передавать по ссылкам
+    QThread* first_thread = QThread::create(unique, std::ref(first_json), std::ref(recurring.recurring_first_num), std::ref(unique_first));
+    QThread* second_thread = QThread::create(unique, std::ref(second_json), std::ref(recurring.recurring_second_num), std::ref(unique_second));
 
     first_thread->start();
     second_thread->start();
 
-    while(!first_thread_flag || !second_thread_flag)
+    while(!first_thread->isFinished() || !second_thread->isFinished())
         this->thread()->sleep(1);
 
-    //first_thread->quit();
     first_thread->deleteLater();
-    //second_thread->quit();
     second_thread->deleteLater();
 
     qDebug() << "unique finished";
-    qDebug() << "first json size: " << first_json.size();
+    //qDebug() << "first json size: " << first_json.size();
     qDebug() << "unique first size: " << unique_first.size();
-    qDebug() << "second json size: " << second_json.size();
+    //qDebug() << "second json size: " << second_json.size();
     qDebug() << "unique second size: " << unique_second.size();
 
     emit comparison_unique_finished();
 }
+
 void My_Comparison::comparison_versions() {
     qDebug() << "versions starteded";
-
+    //нутро подсказывает мне, что оно работает не совсем правильно, но заставить это работать абсолютно корректно невозможно или слишком трудозатратно
     for(int a = 0; a < recurring.recurring_first_num.size(); ++a) {
         if (first_json[recurring.recurring_first_num[a]].toObject()["version"].toString() > second_json[recurring.recurring_second_num[a]].toObject()["version"].toString())
             newer_version.push_back(recurring.recurring_first_num[a]);

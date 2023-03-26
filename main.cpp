@@ -4,29 +4,23 @@
 #include "reply_comparison.h"
 #include "output_json.h"
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     QCoreApplication a(argc, argv);
 
-    //Server_answer server_answer("https://rdb.altlinux.org/api/version");
-    //Server_answer server_answer("https://httpbin.org/get");
-    Server_answer server_answer("https://rdb.altlinux.org/api/export/branch_binary_packages/sisyphus");
-    //Server_answer server_answer("https://rdb.altlinux.org/api/task/progress/all_tasks_branches");
+    Server_answer server_answer("https://rdb.altlinux.org/api/export/branch_binary_packages/sisyphus");                         //создаём класс и передаём запрос
     Server_answer server_answer1("https://rdb.altlinux.org/api/export/branch_binary_packages/p10");
 
-    while(!server_answer.ready_flag || !server_answer1.ready_flag) {}
+    while(!server_answer.ready_flag || !server_answer1.ready_flag) {}                                                           //ожидаем, пока обы потока завершат действие
 
-    //qDebug() << "*comparison*";
+    Reply_Comparison *comparison = new Reply_Comparison(server_answer.get_reply_struct(), server_answer1.get_reply_struct());   //передаём по структуре данных из каждого класса для сравнения
 
-    Reply_Comparison *comparison = new Reply_Comparison(server_answer.get_json(), server_answer1.get_json());
-
-    Output_JSON *output_json = new Output_JSON;
+    Output_JSON *output_json = new Output_JSON;                                                                                 //класс для вывода
 
     QObject::connect(comparison, &Reply_Comparison::comparison_finished, [&comparison, &output_json] {
         output_json->output(comparison->get_My_Comparison()->get_output_struct());
-    });
+    });                                                                                                                          // дожидаемся конца сравнения данных и передаём результат на вывод
 
-    QObject::connect(output_json, &Output_JSON::output_finished, [] {exit(0);});
+    QObject::connect(output_json, &Output_JSON::output_finished, [] {exit(0);});                                                 // после вывода завершаем программу
 
     return a.exec();
 }

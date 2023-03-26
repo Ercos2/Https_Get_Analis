@@ -10,31 +10,27 @@
 #include <QDebug>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QVariantMap>
-#include <QVariantList>
-#include <QArrayData>
+#include <QJsonArray>
 
-#include <map>
 #include <vector>
 
 class My_Reply : public QObject {
     Q_OBJECT
-    QNetworkAccessManager *manager;
+    QNetworkAccessManager *manager;                             //подготавливаемся к запросу
     QNetworkRequest request;
+
 public:
     QNetworkReply *reply;
-    //QJsonDocument json_document;
     QJsonArray json_array;
-    std::vector<QString> names;
-    std::vector<QString> versions;
+    std::vector<QString> names;                                 //сохраняем имена пакетов для оптимизации сравнения
+    std::vector<QString> versions;                              //тоже самое, но с версиями
 
     explicit My_Reply(QString Url, QObject *parent = nullptr);
-    void get_reply();
-    //void ready_read();
-
+    void get_reply();                                           //совершаем запрос
+    void ready_read();                                          //достаём имена и версии
 
 signals:
     void finished();
-    //void data_ready();
+    void data_ready();
 };
 

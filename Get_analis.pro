@@ -9,7 +9,6 @@ CONFIG += c++17
 SOURCES += \
         main.cpp \
         my_comparison.cpp \
-        my_recurring.cpp \
         my_reply.cpp \
         output_json.cpp \
         reply_comparison.cpp \
@@ -21,8 +20,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 HEADERS += \
+    Struct_source.h \
     my_comparison.h \
-    my_recurring.h \
     my_reply.h \
     output_json.h \
     reply_comparison.h \
