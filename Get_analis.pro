@@ -11,6 +11,7 @@ SOURCES += \
         my_comparison.cpp \
         my_recurring.cpp \
         my_reply.cpp \
+        output_json.cpp \
         reply_comparison.cpp \
         server_answer.cpp
 
@@ -23,5 +24,6 @@ HEADERS += \
     my_comparison.h \
     my_recurring.h \
     my_reply.h \
+    output_json.h \
     reply_comparison.h \
     server_answer.h
